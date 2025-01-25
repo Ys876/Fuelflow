@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { Groq } = require('groq-sdk');
-const { PurdueDiningScraper } = require('./scrapers/purdue_dining_scraper');
+const PurdueDiningScraper = require('./scrapers/purdue_dining_scraper');
 require('dotenv').config();
 
 const app = express();
@@ -24,7 +24,7 @@ app.get('/api/menu', async (req, res) => {
       });
     }
 
-    const menu = await scraper.get_menu(diningCourt, mealType, date);
+    const menu = await scraper.getMenu(diningCourt, mealType, date);
     res.json(menu);
   } catch (error) {
     console.error('Error fetching menu:', error);
