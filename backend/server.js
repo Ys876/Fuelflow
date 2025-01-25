@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { Groq } = require('groq-sdk');
+const { PurdueDiningScraper } = require('./scrapers/purdue_dining_scraper');
 require('dotenv').config();
 
 const app = express();
@@ -9,6 +10,29 @@ app.use(express.json());
 
 const groq = new Groq({
   apiKey: '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'
+});
+
+const scraper = new PurdueDiningScraper();
+
+app.get('/api/menu', async (req, res) => {
+  try {
+    const { diningCourt, mealType, date } = req.query;
+    
+    if (!diningCourt || !mealType) {
+      return res.status(400).json({ 
+        error: "Both diningCourt and mealType are required" 
+      });
+    }
+
+    const menu = await scraper.get_menu(diningCourt, mealType, date);
+    res.json(menu);
+  } catch (error) {
+    console.error('Error fetching menu:', error);
+    res.status(500).json({ 
+      error: "Failed to fetch menu",
+      details: error.message 
+    });
+  }
 });
 
 app.post('/api/analyze-meals', async (req, res) => {
@@ -55,7 +79,7 @@ app.post('/api/analyze-meals', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 5001;
+const PORT = 5001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
