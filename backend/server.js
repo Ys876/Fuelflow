@@ -1,15 +1,27 @@
 const express = require('express');
 const cors = require('cors');
-const { Groq } = require('groq-sdk');
+const dotenv = require('dotenv');
 const axios = require('axios');
-require('dotenv').config();
+const { Groq } = require('groq-sdk');
+const https = require('https'); // Added https module
+
+dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000', // Allow requests from the frontend
+}));
 app.use(express.json());
 
 const groq = new Groq({
   apiKey: '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'
+});
+
+const PORT = process.env.PORT || 5001;
+
+// Test endpoint
+app.get('/test', (req, res) => {
+  res.json({ message: 'Backend is running!' });
 });
 
 app.get('/api/menu', async (req, res) => {
@@ -81,7 +93,24 @@ app.post('/api/analyze-meals', async (req, res) => {
   }
 });
 
-const PORT = 5001;
+// Period Tracker API endpoint
+app.post('/api/predict-cycle', (req, res) => {
+  const { cycleStartDate, nextCycleStartDate, periodLength } = req.body;
+
+  // Dummy data for testing
+  const cycleData = {
+    prediction: {
+      period: { start_date: "2025-01-01", end_date: "2025-01-05" },
+      follicular: { start_date: "2025-01-06", end_date: "2025-01-16" },
+      ovulation: { start_date: "2025-01-17", end_date: "2025-01-20" },
+      luteal: { start_date: "2025-01-21", end_date: "2025-01-31" },
+    },
+    warnings: [],
+  };
+
+  res.json(cycleData);
+});
+
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });

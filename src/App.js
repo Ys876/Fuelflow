@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import CssBaseline from '@mui/material/CssBaseline';
 
 import { AuthProvider } from './context/AuthContext';
@@ -9,9 +11,10 @@ import CycleInfo from './components/Auth/CycleInfo';
 import Dashboard from './components/Dashboard/Dashboard';
 import MealRecommendation from './components/MealRecommendation/MealRecommendation';
 import MealAnalysis from './components/MealAnalysis/MealAnalysis';
+import PeriodTracker from './components/PeriodTracker/PeriodTracker';
 
 // Create a custom theme with enhanced aesthetics
-const theme = createTheme({
+const appTheme = createTheme({
   palette: {
     primary: {
       main: '#FF69B4',
@@ -106,19 +109,22 @@ const theme = createTheme({
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AuthProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Login />} />
-            <Route path="/cycle-info" element={<CycleInfo />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/meal-recommendation" element={<MealRecommendation />} />
-            <Route path="/meal-analysis" element={<MealAnalysis />} />
-          </Routes>
-        </Router>
-      </AuthProvider>
+    <ThemeProvider theme={appTheme}>
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <CssBaseline />
+        <AuthProvider>
+          <Router>
+            <Routes>
+              <Route path="/" element={<Login />} />
+              <Route path="/cycle-info" element={<CycleInfo />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/meal-recommendation" element={<MealRecommendation />} />
+              <Route path="/meal-analysis" element={<MealAnalysis />} />
+              <Route path="/period-tracker" element={<PeriodTracker />} />
+            </Routes>
+          </Router>
+        </AuthProvider>
+      </LocalizationProvider>
     </ThemeProvider>
   );
 }
