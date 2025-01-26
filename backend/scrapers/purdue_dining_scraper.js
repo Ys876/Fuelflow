@@ -113,16 +113,25 @@ class PurdueDiningScraper {
                 'https://api.hfs.purdue.edu/graphql',
                 jsonData,
                 {
-                    headers: this.headers,
-                    cookies: this.cookies
+                    headers: {
+                        ...this.headers,
+                        'Cookie': Object.entries(this.cookies)
+                            .map(([key, value]) => `${key}=${value}`)
+                            .join('; ')
+                    }
                 }
             );
 
+            if (!response.data) {
+                throw new Error('Empty response from API');
+            }
+
             return this.parseMenuData(response.data, mealType);
         } catch (error) {
-            console.error('Error fetching menu:', error);
+            console.error('Error fetching menu:', error.response?.data || error.message);
             return {
                 error: 'Failed to fetch menu data',
+                details: error.response?.data?.errors?.[0]?.message || error.message,
                 items: []
             };
         }

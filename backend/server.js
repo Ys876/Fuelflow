@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { Groq } = require('groq-sdk');
-const PurdueDiningScraper = require('./scrapers/purdue_dining_scraper');
+const axios = require('axios');
 require('dotenv').config();
 
 const app = express();
@@ -11,8 +11,6 @@ app.use(express.json());
 const groq = new Groq({
   apiKey: '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'
 });
-
-const scraper = new PurdueDiningScraper();
 
 app.get('/api/menu', async (req, res) => {
   try {
@@ -24,13 +22,17 @@ app.get('/api/menu', async (req, res) => {
       });
     }
 
-    const menu = await scraper.getMenu(diningCourt, mealType, date);
-    res.json(menu);
+    // Forward the request to the Python service
+    const response = await axios.get('http://localhost:5002/api/menu', {
+      params: { diningCourt, mealType, date }
+    });
+
+    res.json(response.data);
   } catch (error) {
-    console.error('Error fetching menu:', error);
-    res.status(500).json({ 
+    console.error('Error fetching menu:', error.response?.data || error.message);
+    res.status(error.response?.status || 500).json({ 
       error: "Failed to fetch menu",
-      details: error.message 
+      details: error.response?.data?.error || error.message 
     });
   }
 });
