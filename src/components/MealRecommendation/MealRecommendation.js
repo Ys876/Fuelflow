@@ -58,7 +58,7 @@ const MealRecommendation = () => {
 
   const fetchMenu = async () => {
     try {
-      const response = await fetch(`http://localhost:5001/api/menu?diningCourt=${diningCourt}&mealType=${mealType}`);
+      const response = await fetch(`http://localhost:5002/api/menu?diningCourt=${diningCourt}&mealType=${mealType}`);
       const data = await response.json();
       
       if (data.error) {
@@ -67,6 +67,13 @@ const MealRecommendation = () => {
         return false;
       }
       
+      if (!data.items || !Array.isArray(data.items)) {
+        setMenuError('Invalid menu data received');
+        setMenuItems([]);
+        return false;
+      }
+
+      console.log('Fetched menu data:', data); // Debug log
       setMenuItems(data.items);
       setMenuError('');
       return true;
@@ -90,24 +97,30 @@ const MealRecommendation = () => {
         return;
       }
 
+      console.log('Menu items:', menuItems); // Debug log
+
       // Then analyze the meals
-      const response = await fetch('http://localhost:5001/api/analyze-meals', {
+      const response = await fetch('http://localhost:5002/api/analyze-meals', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           diningCourt,
-          mealItems: menuItems.map(item => item.name),
-          cyclePhase: user?.cycleInfo?.currentPhase || 'menstrual',
+          mealItems: menuItems.map(item => item.name)
         }),
       });
 
+      console.log('Response status:', response.status); // Debug log
+
       if (!response.ok) {
+        const errorData = await response.text();
+        console.log('Error response:', errorData); // Debug log
         throw new Error('Failed to get recommendations');
       }
 
       const data = await response.json();
+      console.log('Recommendations data:', data); // Debug log
       setRecommendations(data);
     } catch (err) {
       setError('Failed to get recommendations. Please try again.');
@@ -209,7 +222,7 @@ const MealRecommendation = () => {
                     Recommended Items
                   </Typography>
                   <List>
-                    {recommendations.recommended.map((item, index) => (
+                    {recommendations.recommended_items.map((item, index) => (
                       <ListItem key={index}>
                         <ListItemIcon>
                           <CheckCircleIcon color="success" />
@@ -225,18 +238,28 @@ const MealRecommendation = () => {
             <Grid item xs={12} md={6}>
               <Card>
                 <CardContent>
-                  <Typography variant="h6" color="error.main" gutterBottom>
-                    Not Recommended Items
+                  <Typography variant="h6" color="primary.main" gutterBottom>
+                    Nutritional Analysis
                   </Typography>
                   <List>
-                    {recommendations.notRecommended.map((item, index) => (
-                      <ListItem key={index}>
-                        <ListItemIcon>
-                          <CancelIcon color="error" />
-                        </ListItemIcon>
-                        <ListItemText primary={item} />
-                      </ListItem>
-                    ))}
+                    <ListItem>
+                      <ListItemIcon>
+                        <RestaurantIcon color="primary" />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary="Protein-Rich Options"
+                        secondary={recommendations.nutritional_analysis.protein_rich.join(', ')}
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemIcon>
+                        <RestaurantIcon color="primary" />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary="Vegetarian Options"
+                        secondary={recommendations.nutritional_analysis.vegetarian.join(', ')}
+                      />
+                    </ListItem>
                   </List>
                 </CardContent>
               </Card>
@@ -246,11 +269,20 @@ const MealRecommendation = () => {
           <Card sx={{ mt: 3 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Detailed Analysis
+                Additional Information
               </Typography>
-              <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
-                {recommendations.explanation}
-              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="body1">
+                    Dining Court Rating: {recommendations.dining_court_rating}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="body1">
+                    Estimated Wait Time: {recommendations.wait_time_estimate}
+                  </Typography>
+                </Grid>
+              </Grid>
             </CardContent>
           </Card>
         </Box>
